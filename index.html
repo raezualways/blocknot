@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Минималистичный JSON Форматер</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Строго чёрно-белая палитра */
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --card-bg: #1a1a1a;
+            --input-bg: #0a0a0a;
+            --border-color: #333333;
+            --accent-color: #ffffff;
+            --hover-color: #444444;
+            --success-color: #ffffff;
+            --error-color: #ff4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-primary {
+            background-color: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-color);
+            color: var(--text-color);
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .input-section, .output-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 0.75rem 1rem;
+            background-color: var(--input-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .textarea-container {
+            flex: 1;
+            display: flex;
+        }
+
+        textarea {
+            flex: 1;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 1rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 2px var(--text-color);
+        }
+
+        .footer {
+            background-color: var(--card-bg);
+            padding: 0.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .header {
+                padding: 0.75rem 1rem;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Дополнительные стили для форматирования JSON */
+        .formatted-json {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 1rem;
+        }
+
+        .json-key {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .json-string {
+            color: #ffffff;
+        }
+
+        .json-number {
+            color: #ffffff;
+        }
+
+        .json-boolean {
+            color: #ffffff;
+        }
+
+        .json-null {
+            color: #888;
+        }
+
+        /* Стили для кнопок управления файлами */
+        .file-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .notification.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">Минималистичный JSON Форматер</div>
+        <div class="controls">
+            <button class="btn" id="formatBtn">
+                <i class="fas fa-code"></i> Форматировать
+            </button>
+            <button class="btn" id="minifyBtn">
+                <i class="fas fa-compress-arrows-alt"></i> Минифицировать
+            </button>
+            <button class="btn" id="clearBtn">
+                <i class="fas fa-trash"></i> Очистить
+            </button>
+            <button class="btn" id="copyBtn">
+                <i class="fas fa-copy"></i> Копировать
+            </button>
+            <button class="btn" id="saveBtn">
+                <i class="fas fa-save"></i> Сохранить
+            </button>
+            <button class="btn" id="loadBtn">
+                <i class="fas fa-folder-open"></i> Загрузить
+            </button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="input-section">
+            <div class="section-header">
+                <div class="section-title">Исходные данные</div>
+                <div class="section-actions">
+                    <button class="action-btn" id="pasteBtn" title="Вставить из буфера обмена">
+                        <i class="fas fa-paste"></i>
+                    </button>
+                    <button class="action-btn" id="uploadBtn" title="Загрузить файл">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" accept=".json,.txt,.text">
+                </div>
+            </div>
+            <div class="textarea-container">
+                <textarea id="inputText" placeholder="Вставьте JSON или текст здесь..."></textarea>
+            </div>
+        </section>
+
+        <section class="output-section">
+            <div class="section-header">
+                <div class="section-title">Результат</div>
+                <div class="section-actions">
+                    <button class="action-btn" id="downloadBtn" title="Скачать результат">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="action-btn" id="copyOutputBtn" title="Копировать результат">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="textarea-container">
+                <div id="outputText" class="formatted-json"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        Минималистичный JSON Форматер • Чёрно-белая тема • Локальное хранение данных
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const formatBtn = document.getElementById('formatBtn');
+            const minifyBtn = document.getElementById('minifyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const pasteBtn = document.getElementById('pasteBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('fileInput');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyOutputBtn = document.getElementById('copyOutputBtn');
+            const toast = document.getElementById('toast');
+
+            // Функция показа уведомлений
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+
+            // Форматирование JSON
+            function formatJSON() {
+                try {
+                    const input = inputText.value.trim();
+                    if (!input) {
+                        showToast('Введите данные для форматирования');
+                        return;
+                    }
+
+                    // Попытка распознать как JSON
+                    if (input.startsWith('{') || input.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(input);
+                            const formatted = JSON.stringify(parsed, null, 2);
+                            outputText.innerHTML = syntaxHighlight(formatted);
+                            showToast('JSON успешно отформатирован');
+                            return;
+                        } catch (e) {
+                            // Если не JSON, продолжаем как с обычным текстом
+                        }
+                    }
+
+                    // Обработка обычного текста
+                    const formatted = input
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line)
+                        .join('\n');
+                    
+                    outputText.textContent = formatted;
+                    showToast('Текст успешно отформатирован');
+                } catch (error) {
+                    showToast('Ошибка: ' + error.message);
+                }
+            }
+
+            // Минификация JSON
+            function minifyJSON() {
+                try {
+                    const input = inputText.value.trim();
+                    if (!input) {
+                        showToast('Введите данные для минификации');
+                        return;
+                    }
+
+                    if (input.startsWith('{') || input.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(input);
+                            const minified = JSON.stringify(parsed);
+                            outputText.textContent = minified;
+                            showToast('JSON успешно минифицирован');
+                            return;
+                        } catch (e) {
+                            // Если не JSON, продолжаем как с обычным текстом
+                        }
+                    }
+
+                    // Обработка обычного текста
+                    const minified = input.replace(/\s+/g, ' ').trim();
+                    outputText.textContent = minified;
+                    showToast('Текст успешно минифицирован');
+                } catch (error) {
+                    showToast('Ошибка: ' + error.message);
+                }
+            }
+
+            // Подсветка синтаксиса JSON
+            function syntaxHighlight(json) {
+                json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                    let cls = 'json-number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'json-key';
+                        } else {
+                            cls = 'json-string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'json-boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'json-null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            }
+
+            // Очистка
+            function clearAll() {
+                inputText.value = '';
+                outputText.textContent = '';
+                showToast('Данные очищены');
+            }
+
+            // Копирование результата
+            function copyOutput() {
+                const text = outputText.textContent || outputText.innerText;
+                if (!text) {
+                    showToast('Нет данных для копирования');
+                    return;
+                }
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Результат скопирован в буфер обмена');
+                }).catch(err => {
+                    showToast('Ошибка копирования: ' + err);
+                });
+            }
+
+            // Вставка из буфера обмена
+            async function pasteFromClipboard() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    inputText.value = text;
+                    showToast('Текст вставлен из буфера обмена');
+                } catch (err) {
+                    showToast('Ошибка вставки: ' + err);
+                }
+            }
+
+            // Загрузка файла
+            function uploadFile() {
+                fileInput.click();
+            }
+
+            // Обработка выбора файла
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    inputText.value = e.target.result;
+                    showToast(`Файл ${file.name} загружен`);
+                    // Автоматическое форматирование при загрузке
+                    formatJSON();
+                };
+                reader.readAsText(file);
+            });
+
+            // Сохранение в localStorage
+            function saveData() {
+                const data = {
+                    input: inputText.value,
+                    output: outputText.textContent,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('jsonFormatterData', JSON.stringify(data));
+                showToast('Данные сохранены в браузере');
+            }
+
+            // Загрузка из localStorage
+            function loadData() {
+                const savedData = localStorage.getItem('jsonFormatterData');
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        inputText.value = data.input || '';
+                        outputText.textContent = data.output || '';
+                        showToast('Данные загружены из браузера');
+                    } catch (e) {
+                        showToast('Ошибка загрузки данных: ' + e.message);
+                    }
+                } else {
+                    showToast('Нет сохранённых данных');
+                }
+            }
+
+            // Скачивание результата
+            function downloadResult() {
+                const text = outputText.textContent || outputText.innerText;
+                if (!text) {
+                    showToast('Нет данных для скачивания');
+                    return;
+                }
+
+                const blob = new Blob([text], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `formatted_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Файл скачивается');
+            }
+
+            // Автоматическое сохранение при изменениях
+            inputText.addEventListener('input', function() {
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => {
+                    saveData();
+                }, 2000);
+            });
+
+            let autoSaveTimeout;
+
+            // Обработчики событий
+            formatBtn.addEventListener('click', formatJSON);
+            minifyBtn.addEventListener('click', minifyJSON);
+            clearBtn.addEventListener('click', clearAll);
+            copyBtn.addEventListener('click', copyOutput);
+            saveBtn.addEventListener('click', saveData);
+            loadBtn.addEventListener('click', loadData);
+            pasteBtn.addEventListener('click', pasteFromClipboard);
+            uploadBtn.addEventListener('click', uploadFile);
+            downloadBtn.addEventListener('click', downloadResult);
+            copyOutputBtn.addEventListener('click', copyOutput);
+
+            // Горячие клавиши
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'f':
+                            e.preventDefault();
+                            formatJSON();
+                            break;
+                        case 'm':
+                            e.preventDefault();
+                            minifyJSON();
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            saveData();
+                            break;
+                        case 'o':
+                            e.preventDefault();
+                            uploadFile();
+                            break;
+                    }
+                }
+            });
+
+            // Автоматическая загрузка сохранённых данных при запуске
+            loadData();
+        });
+    </script>
+</body>
+</html>
